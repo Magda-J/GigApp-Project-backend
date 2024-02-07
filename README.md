@@ -1,1 +1,2 @@
-# GigApp-Project-backend
+# EventAppBackend
+Backend for event app
