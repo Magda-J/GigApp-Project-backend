@@ -92,7 +92,7 @@ app.use(async (req, res, next) => {
 app.get("/", async (req, res) => {
 try {
   const a = await Event.find();
-  console.log("Called A in index.js");
+  
   res.send(a);
 } catch (error) {
  console.error("error in GET/ index.js")
@@ -100,9 +100,7 @@ try {
   
 });
 
-// app.get("/", async (req, res) => {
-//   res.send(await Ad.find());
-// });
+
 
 app.post("/", async (req, res) => {
   const newEvent = req.body;
