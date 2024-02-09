@@ -26,12 +26,10 @@ app.use(express.json());
     {
       const value = req.params.usernameValue
 
-      console.log("BACKEND CHECKING DATABASE")
       const user = await User.findOne({ username: value });
 
       console.log(user);
-      // console.log(req.body);
-
+      
       if(user)
       {
         res.send(true)
@@ -66,12 +64,12 @@ app.post("/auth", async (req, res) => {
     return res.sendStatus(403);
   }
 
-  //   do not store password in plain text - its just for learning purposes
+  
   if (req.body.password !== user.password) {
     console.log("wrong password");
     return res.sendStatus(403);
   }
-  //   code to generate token
+  // code to generate token
   user.token = uuidv4();
   await user.save();
   res.send({ token: user.token });
@@ -88,49 +86,198 @@ app.use(async (req, res, next) => {
   }
 });
 
-// defining CRUD operations
+// CRUD operations
+// app.get("/", async (req, res) => {
+// try {
+//   const a = await Event.find();
+  
+//   res.send(a);
+// } catch (error) {
+//  console.error("error in GET/ index.js")
+// }
+  
+// });
+
+// new get
+
 app.get("/", async (req, res) => {
-try {
-  const a = await Event.find();
-  
-  res.send(a);
-} catch (error) {
- console.error("error in GET/ index.js")
-}
-  
+  try {
+    // Retrieve the user's token from the authorization header
+    const authHeader = req.headers["authorization"];
+    
+    // Find the user based on the token
+    const user = await User.findOne({ token: authHeader });
+
+    // Check if the user exists
+    if (!user) {
+      return res.sendStatus(403); // Forbidden if user not found
+    }
+
+    // Find events created by the user
+    const userEvents = await Event.find({ createdBy: user._id });
+
+    res.send(userEvents);
+  } catch (error) {
+    console.error("Error fetching user events:", error);
+    res.status(500).send({ message: "Error fetching user events." });
+  }
 });
 
+// old post function
 
+// app.post("/", async (req, res) => {
+//   const newEvent = req.body;
+  
+//   const event = new Event(newEvent);
+//   console.log("Created an event")
+//   await event.save();
+//   res.send({ message: "New event inserted." });
+// });
 
+// test
 app.post("/", async (req, res) => {
   const newEvent = req.body;
-  // console.log(req.body)
-  const event = new Event(newEvent);
-  console.log("Created an event")
-  await event.save();
-  res.send({ message: "New event inserted." });
+
+  // Retrieve the user's token from the authorization header
+  const authHeader = req.headers["authorization"];
+  
+  try {
+    // Find the user based on the token
+    const user = await User.findOne({ token: authHeader });
+
+    // Check if the user exists
+    if (!user) {
+      return res.sendStatus(403); // Forbidden if user not found
+    }
+
+    // Create a new event document and associate it with the user
+    const event = new Event({
+      ...newEvent,
+      createdBy: user._id // Assign the user's ID to the createdBy field
+    });
+
+    // Save the event
+    await event.save();
+    
+    res.send({ message: "New event inserted." });
+  } catch (error) {
+    console.error("Error creating event:", error);
+    res.status(500).send({ message: "Error creating event." });
+  }
 });
+// test
 
 
 
-app.delete("/:id", async (req, res) => {
-  await Event.findByIdAndDelete(req.params.id);
-  res.send({ message: "Event removed." });
-});
+// app.delete("/:id", async (req, res) => {
+//   await Event.findByIdAndDelete(req.params.id);
+//   res.send({ message: "Event removed." });
+// });
 
+// app.put("/:id", async (req, res) => {
+//   console.log("Connecting to Update DB");
+//   console.log(req.params)
+//   console.log(req.body)
+//   console.log("Making Update DB");
+
+//   await Event.findByIdAndUpdate(req.params.id, req.body);
+//   res.send({ message: "Event updated." });
+// });
+
+
+// new del and up
+// Update event
 app.put("/:id", async (req, res) => {
-  console.log("Connecting to Update DB");
-  console.log(req.params)
-  console.log(req.body)
-  console.log("Making Update DB");
+  try {
+    // Retrieve the user's token from the authorization header
+    const authHeader = req.headers["authorization"];
+    
+    // Find the user based on the token
+    const user = await User.findOne({ token: authHeader });
 
-  await Event.findByIdAndUpdate(req.params.id, req.body);
-  res.send({ message: "Event updated." });
+    // Check if the user exists
+    if (!user) {
+      return res.sendStatus(403); // Forbidden if user not found
+    }
+
+    // Find the event by ID
+    const event = await Event.findById(req.params.id);
+
+    // Check if the event exists
+    if (!event) {
+      return res.status(404).send({ message: "Event not found." });
+    }
+
+    // Check if the user is the creator of the event
+    if (event.createdBy.toString() !== user._id.toString()) {
+      return res.status(403).send({ message: "Unauthorized to update this event." });
+    }
+
+    // Update the event
+    await Event.findByIdAndUpdate(req.params.id, req.body);
+    res.send({ message: "Event updated." });
+  } catch (error) {
+    console.error("Error updating event:", error);
+    res.status(500).send({ message: "Error updating event." });
+  }
 });
+
+// Delete event
+app.delete("/:id", async (req, res) => {
+  try {
+    // Retrieve the user's token from the authorization header
+    const authHeader = req.headers["authorization"];
+    
+    // Find the user based on the token
+    const user = await User.findOne({ token: authHeader });
+
+    // Check if the user exists
+    if (!user) {
+      return res.sendStatus(403); // Forbidden if user not found
+    }
+
+    // Find the event by ID
+    const event = await Event.findById(req.params.id);
+
+    // Check if the event exists
+    if (!event) {
+      return res.status(404).send({ message: "Event not found." });
+    }
+
+    // Check if the user is the creator of the event
+    if (event.createdBy.toString() !== user._id.toString()) {
+      return res.status(403).send({ message: "Unauthorized to delete this event." });
+    }
+
+    // Delete the event
+    await Event.findByIdAndDelete(req.params.id);
+    res.send({ message: "Event deleted." });
+  } catch (error) {
+    console.error("Error deleting event:", error);
+    res.status(500).send({ message: "Error deleting event." });
+  }
+});
+
+// new del and up
+
+
+
+
+
 
 // starting the server
+
+// app.listen(3001, () => {
+//   console.log("listening on port 3001");
+//   // app.listen(
+//   //   3000, 
+//   //   () => {
+//   //   console.log("listening on port 3000");
+// });
+
 app.listen(
   3000, 
   () => {
   console.log("listening on port 3000");
 });
+

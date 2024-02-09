@@ -5,7 +5,10 @@ const eventSchema = mongoose.Schema({
   city: String,
   date: String,
   price: Number,
-  description: String
+  description: String,
+  // test
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'users' }
+  // test
 })
 
 module.exports.Event = mongoose.model('Event', eventSchema)
