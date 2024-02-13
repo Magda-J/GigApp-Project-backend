@@ -75,6 +75,18 @@ app.post("/auth", async (req, res) => {
   res.send({ token: user.token });
 });
 
+app.get("/events", async (req, res) => {
+  try {
+    // Find all events
+    const allEvents = await Event.find();
+
+    res.send(allEvents);
+  } catch (error) {
+    console.error("Error fetching all events:", error);
+    res.status(500).send({ message: "Error fetching all events." });
+  }
+});
+
 // Authorization middleware
 app.use(async (req, res, next) => {
   const authHeader = req.headers["authorization"];
@@ -97,6 +109,12 @@ app.use(async (req, res, next) => {
 // }
   
 // });
+
+// new get for all events
+
+// New get function to retrieve all events
+
+
 
 // new get
 
@@ -267,17 +285,13 @@ app.delete("/:id", async (req, res) => {
 
 // starting the server
 
-// app.listen(3001, () => {
-//   console.log("listening on port 3001");
+app.listen(3001, () => {
+  console.log("listening on port 3001");
 //   // app.listen(
 //   //   3000, 
 //   //   () => {
 //   //   console.log("listening on port 3000");
-// });
-
-app.listen(
-  3000, 
-  () => {
-  console.log("listening on port 3000");
 });
+
+
 
