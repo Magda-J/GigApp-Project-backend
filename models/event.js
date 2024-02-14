@@ -5,7 +5,9 @@ const eventSchema = mongoose.Schema({
   city: String,
   date: String,
   price: Number,
-  description: String,
+ 
+  time: String,
+  photo: String,
   // test
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'users' }
   // test
