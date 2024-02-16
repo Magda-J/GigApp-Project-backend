@@ -12,6 +12,7 @@ const eventSchema = mongoose.Schema({
   venue: String,
   countrycode: String,
   postcode: String,
+  
   // test
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'users' }
   // test
