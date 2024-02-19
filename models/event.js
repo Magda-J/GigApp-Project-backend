@@ -7,11 +7,13 @@ const eventSchema = mongoose.Schema({
   price: Number,
   time: String,
   photo: String,
-
  
   venue: String,
   countrycode: String,
   postcode: String,
+  currency: String,
+  price2: Number,
+  ticketlink: String,
   
   // test
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'users' }
