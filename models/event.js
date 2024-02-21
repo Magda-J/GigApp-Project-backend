@@ -15,9 +15,9 @@ const eventSchema = mongoose.Schema({
   price2: Number,
   ticketlink: String,
   
-  // test
+  // assigns each event to the specific user
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'users' }
-  // test
+  
 })
 
 module.exports.Event = mongoose.model('Event', eventSchema)

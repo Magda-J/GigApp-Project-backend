@@ -22,37 +22,32 @@ app.use(cors());
 app.use(express.json());
 
 //CheckUser
-  app.get("/username/:usernameValue", async (req, res) =>
-    {
-      const value = req.params.usernameValue
+app.get("/username/:usernameValue", async (req, res) => {
+  const value = req.params.usernameValue;
 
-      const user = await User.findOne({ username: value });
+  const user = await User.findOne({ username: value });
 
-      console.log(user);
-      
-      if(user)
-      {
-        res.send(true)
-        // return true
-      }
-      else
-      {
-        res.send(false)
-        // return false
-      }
-    }
-  )
+  console.log(user);
+
+  if (user) {
+    res.send(true);
+    // return true
+  } else {
+    res.send(false);
+    // return false
+  }
+});
 
 //create user
-  app.post("/signup", async (req, res) => {
-    const newUser = req.body;
-    // console.log(req.body)
-    const user = new User(newUser);
-    console.log("Created an user")
-    console.log(user)
-    await user.save();
-    res.send({ message: "New User Created." });
-  });
+app.post("/signup", async (req, res) => {
+  const newUser = req.body;
+  // console.log(req.body)
+  const user = new User(newUser);
+  console.log("Created an user");
+  console.log(user);
+  await user.save();
+  res.send({ message: "New User Created." });
+});
 
 // Authorization generation endpoint
 app.post("/auth", async (req, res) => {
@@ -64,7 +59,6 @@ app.post("/auth", async (req, res) => {
     return res.sendStatus(403);
   }
 
-  
   if (req.body.password !== user.password) {
     console.log("wrong password");
     return res.sendStatus(403);
@@ -74,6 +68,8 @@ app.post("/auth", async (req, res) => {
   await user.save();
   res.send({ token: user.token });
 });
+
+// get all posts in database for the homepage without authentication
 
 app.get("/events", async (req, res) => {
   try {
@@ -99,30 +95,13 @@ app.use(async (req, res, next) => {
 });
 
 // CRUD operations
-// app.get("/", async (req, res) => {
-// try {
-//   const a = await Event.find();
-  
-//   res.send(a);
-// } catch (error) {
-//  console.error("error in GET/ index.js")
-// }
-  
-// });
-
-// new get for all events
-
-// New get function to retrieve all events
-
-
-
-// new get
+// get all posts controller
 
 app.get("/", async (req, res) => {
   try {
     // Retrieve the user's token from the authorization header
     const authHeader = req.headers["authorization"];
-    
+
     // Find the user based on the token
     const user = await User.findOne({ token: authHeader });
 
@@ -141,24 +120,14 @@ app.get("/", async (req, res) => {
   }
 });
 
-// old post function
+// add post controller
 
-// app.post("/", async (req, res) => {
-//   const newEvent = req.body;
-  
-//   const event = new Event(newEvent);
-//   console.log("Created an event")
-//   await event.save();
-//   res.send({ message: "New event inserted." });
-// });
-
-// test
 app.post("/", async (req, res) => {
   const newEvent = req.body;
 
   // Retrieve the user's token from the authorization header
   const authHeader = req.headers["authorization"];
-  
+
   try {
     // Find the user based on the token
     const user = await User.findOne({ token: authHeader });
@@ -171,45 +140,25 @@ app.post("/", async (req, res) => {
     // Create a new event document and associate it with the user
     const event = new Event({
       ...newEvent,
-      createdBy: user._id // Assign the user's ID to the createdBy field
+      createdBy: user._id, // Assign the user's ID to the createdBy field
     });
 
     // Save the event
     await event.save();
-    
+
     res.send({ message: "New event inserted." });
   } catch (error) {
     console.error("Error creating event:", error);
-    res.status(500).send({ message: "Error creating event." });
+    res.status(500).send({ message: "Error creating event.", error });
   }
 });
-// test
 
-
-
-// app.delete("/:id", async (req, res) => {
-//   await Event.findByIdAndDelete(req.params.id);
-//   res.send({ message: "Event removed." });
-// });
-
-// app.put("/:id", async (req, res) => {
-//   console.log("Connecting to Update DB");
-//   console.log(req.params)
-//   console.log(req.body)
-//   console.log("Making Update DB");
-
-//   await Event.findByIdAndUpdate(req.params.id, req.body);
-//   res.send({ message: "Event updated." });
-// });
-
-
-// new del and up
 // Update event
 app.put("/:id", async (req, res) => {
   try {
     // Retrieve the user's token from the authorization header
     const authHeader = req.headers["authorization"];
-    
+
     // Find the user based on the token
     const user = await User.findOne({ token: authHeader });
 
@@ -228,7 +177,9 @@ app.put("/:id", async (req, res) => {
 
     // Check if the user is the creator of the event
     if (event.createdBy.toString() !== user._id.toString()) {
-      return res.status(403).send({ message: "Unauthorized to update this event." });
+      return res
+        .status(403)
+        .send({ message: "Unauthorized to update this event." });
     }
 
     // Update the event
@@ -245,7 +196,7 @@ app.delete("/:id", async (req, res) => {
   try {
     // Retrieve the user's token from the authorization header
     const authHeader = req.headers["authorization"];
-    
+
     // Find the user based on the token
     const user = await User.findOne({ token: authHeader });
 
@@ -264,7 +215,9 @@ app.delete("/:id", async (req, res) => {
 
     // Check if the user is the creator of the event
     if (event.createdBy.toString() !== user._id.toString()) {
-      return res.status(403).send({ message: "Unauthorized to delete this event." });
+      return res
+        .status(403)
+        .send({ message: "Unauthorized to delete this event." });
     }
 
     // Delete the event
@@ -276,22 +229,12 @@ app.delete("/:id", async (req, res) => {
   }
 });
 
-// new del and up
-
-
-
-
-
-
 // starting the server
 
 app.listen(3001, () => {
   console.log("listening on port 3001");
   // app.listen(
-  //   3000, 
+  //   3000,
   //   () => {
   //   console.log("listening on port 3000");
 });
-
-
-
