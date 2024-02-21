@@ -229,6 +229,121 @@ app.delete("/:id", async (req, res) => {
   }
 });
 
+
+
+
+
+// new controllers \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+// Add interested event
+app.post("/addInterestedEvent", async (req, res) => {
+  try {
+    // Retrieve the user's token from the authorization header
+    const authHeader = req.headers["authorization"];
+
+    // Find the user based on the token
+    const user = await User.findOne({ token: authHeader });
+
+    // Check if the user exists
+    if (!user) {
+      return res.sendStatus(403); // Forbidden if user not found
+    }
+
+    // Get the event ID from the request body
+    const eventId = req.body.eventId;
+    
+
+    // Check if the event ID is provided
+    if (!eventId) {
+      return res.status(400).send({ message: "Event ID is required." });
+    }
+
+    // Check if the event with the provided ID exists
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).send({ message: "Event not found." });
+    }
+
+    // Check if the user has already bookmarked the event
+    if (user.interested.includes(eventId)) {
+      return res.status(400).send({ message: "Event already bookmarked." });
+    }
+
+    // Add the event ID to the user's interested array
+    user.interested.push(eventId);
+    await user.save();
+
+    res.send({ message: "Event bookmarked successfully." });
+  } catch (error) {
+    console.error("Error bookmarking event:", error);
+    res.status(500).send({ message: "Error bookmarking event." });
+  }
+});
+
+// Remove interested event
+app.post("/removeInterestedEvent", async (req, res) => {
+  try {
+    // Retrieve the user's token from the authorization header
+    const authHeader = req.headers["authorization"];
+
+    // Find the user based on the token
+    const user = await User.findOne({ token: authHeader });
+
+    // Check if the user exists
+    if (!user) {
+      return res.sendStatus(403); // Forbidden if user not found
+    }
+
+    // Get the event ID from the request body
+    const eventId = req.body.eventId;
+
+    // Check if the event ID is provided
+    if (!eventId) {
+      return res.status(400).send({ message: "Event ID is required." });
+    }
+
+    // Check if the user has bookmarked the event
+    if (!user.interested.includes(eventId)) {
+      return res.status(400).send({ message: "Event not bookmarked." });
+    }
+
+    // Remove the event ID from the user's interested array
+    user.interested = user.interested.filter(id => id !== eventId);
+    await user.save();
+
+    res.send({ message: "Event removed from bookmarks successfully." });
+  } catch (error) {
+    console.error("Error removing event from bookmarks:", error);
+    res.status(500).send({ message: "Error removing event from bookmarks." });
+  }
+});
+
+// Get interested events controller
+app.get("/interestedEvents", async (req, res) => {
+  try {
+    const authHeader = req.headers["authorization"];
+    const user = await User.findOne({ token: authHeader });
+    if (!user) {
+      return res.sendStatus(403); // Forbidden if user not found
+    }
+    const interestedEvents = await Event.find({ _id: { $in: user.interested } });
+    res.send(interestedEvents);
+  } catch (error) {
+    console.error("Error fetching interested events:", error);
+    res.status(500).send({ message: "Error fetching interested events." });
+  }
+});
+
+
+
+// new controllers \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+
+
+
+
+
+
 // starting the server
 
 app.listen(3001, () => {
