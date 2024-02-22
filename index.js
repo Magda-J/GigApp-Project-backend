@@ -280,43 +280,6 @@ app.post("/addInterestedEvent", async (req, res) => {
   }
 });
 
-// Remove interested event
-app.post("/removeInterestedEvent", async (req, res) => {
-  try {
-    // Retrieve the user's token from the authorization header
-    const authHeader = req.headers["authorization"];
-
-    // Find the user based on the token
-    const user = await User.findOne({ token: authHeader });
-
-    // Check if the user exists
-    if (!user) {
-      return res.sendStatus(403); // Forbidden if user not found
-    }
-
-    // Get the event ID from the request body
-    const eventId = req.body.eventId;
-
-    // Check if the event ID is provided
-    if (!eventId) {
-      return res.status(400).send({ message: "Event ID is required." });
-    }
-
-    // Check if the user has bookmarked the event
-    if (!user.interested.includes(eventId)) {
-      return res.status(400).send({ message: "Event not bookmarked." });
-    }
-
-    // Remove the event ID from the user's interested array
-    user.interested = user.interested.filter(id => id !== eventId);
-    await user.save();
-
-    res.send({ message: "Event removed from bookmarks successfully." });
-  } catch (error) {
-    console.error("Error removing event from bookmarks:", error);
-    res.status(500).send({ message: "Error removing event from bookmarks." });
-  }
-});
 
 // Get interested events controller
 app.get("/interestedEvents", async (req, res) => {
@@ -333,6 +296,86 @@ app.get("/interestedEvents", async (req, res) => {
     res.status(500).send({ message: "Error fetching interested events." });
   }
 });
+
+
+// Remove interested event
+app.post("/removeInterestedEvent", async (req, res) => {
+  try {
+    const authHeader = req.headers["authorization"];
+    const user = await User.findOne({ token: authHeader });
+
+    if (!user) {
+      console.log("User not found");
+      return res.sendStatus(403); // Forbidden if user not found
+    }
+
+    const eventId = req.body.eventId;
+    console.log(`this is the event id ${eventId}`)
+
+    if (!eventId) {
+      console.log("Event ID not provided");
+      return res.status(400).send({ message: "Event ID is required." });
+    }
+
+    // Check if the user has bookmarked the event
+    if (!user.interested.includes(eventId)) {
+      console.log("Event not bookmarked");
+      return res.status(400).send({ message: "Event not bookmarked." });
+    }
+
+    // Remove the event ID from the user's interested array
+    await User.findByIdAndUpdate(user._id, { $pull: { interested: eventId } });
+
+    console.log("Event removed from bookmarks successfully");
+    res.send({ message: "Event removed from bookmarks" });
+    console.log( "Request sent successfully",res.send);
+  } catch (error) {
+    console.error("Error removing event from bookmarks:", error);
+    res.status(500).send({ message: "Error removing event from bookmarks." });
+  }
+});
+
+// coontroller to check if event is bookmarked
+
+// Endpoint to check if an event is bookmarked by a user
+app.get("/isEventBookmarked/:eventId", async (req, res) => {
+  try {
+    // Retrieve the user's token from the authorization header
+    const authHeader = req.headers["authorization"];
+
+    // Find the user based on the token
+    const user = await User.findOne({ token: authHeader });
+
+    // Check if the user exists
+    if (!user) {
+      return res.sendStatus(403); // Forbidden if user not found
+    }
+
+    // Get the event ID from the request parameters
+    const eventId = req.params.eventId;
+
+    // Check if the event ID is provided
+    if (!eventId) {
+      return res.status(400).send({ message: "Event ID is required." });
+    }
+
+    // Check if the event with the provided ID exists
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).send({ message: "Event not found." });
+    }
+
+    // Check if the user has bookmarked the event
+    const isBookmarked = user.interested.includes(eventId);
+    console.log("Bookmark status for event", eventId, ":", isBookmarked); // Log the bookmark status with event ID // Log the bookmark status
+    res.send({ bookmarked: isBookmarked });
+  } catch (error) {
+    console.error("Error checking bookmark status:", error);
+    res.status(500).send({ message: "Error checking bookmark status." });
+  }
+});
+
+
 
 
 
