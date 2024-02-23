@@ -4,12 +4,15 @@ const userSchema = mongoose.Schema({
   username: String,
   password: String,
   token: String,
-  // testing
-  // userEvent: [{
-  //   refId: { type: mongoose.Schema.Types.ObjectId, ref: "events" },
-    
-  // }]
-  // testing
+  
+
+  // test
+
+  interested: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Event' }]
+
+  // test
+
+
 })
 
 module.exports.User = mongoose.model('User', userSchema)
