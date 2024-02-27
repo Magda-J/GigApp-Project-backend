@@ -79,3 +79,17 @@ describe('POST /auth', () => {
 });
 
 
+
+// Test 4 //////////////////////////
+// Asserts that the response status is 200.
+describe('GET /', () => {
+  it('should respond with status code 200', async () => {
+    const response = await request(app).get('/');
+    expect(response.status).toBe(200);
+  });
+});
+
+
+
+// Test 5 /////////////////////////
+

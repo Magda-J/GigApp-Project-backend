@@ -374,15 +374,38 @@ app.get("/isEventBookmarked/:eventId", async (req, res) => {
 });
 
 
+// Get logged user's username controller
+app.get("/loggedUsername", async (req, res) => {
+  try {
+    // Retrieve the user's token from the authorization header
+    const authHeader = req.headers["authorization"];
+
+    // Find the user based on the token
+    const user = await User.findOne({ token: authHeader });
+
+    // Check if the user exists
+    if (!user) {
+      return res.sendStatus(403); // Forbidden if user not found
+    }
+
+    // Send the user's username in the response
+    res.send({ username: user.username });
+  } catch (error) {
+    console.error("Error fetching logged user's username:", error);
+    res.status(500).send({ message: "Error fetching logged user's username." });
+  }
+});
+
+
 
 // new controllers \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 
 // starting the server
 
-// app.listen(port, () => {
-//   console.log(`listening on port ${port}`);
+app.listen(port, () => {
+  console.log(`listening on port ${port}`);
 
-// });
+});
 
 module.exports = app;
