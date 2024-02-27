@@ -403,9 +403,13 @@ app.get("/loggedUsername", async (req, res) => {
 
 // starting the server
 
-app.listen(port, () => {
-  console.log(`listening on port ${port}`);
+// app.listen(port, () => {
+//   console.log(`listening on port ${port}`);
 
+// });
+// starting the server
+app.listen(3001, () => {
+  console.log("listening on port 3001");
 });
 
 module.exports = app;
