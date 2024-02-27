@@ -6,6 +6,7 @@ const { User } = require("./models/user");
 const { v4: uuidv4 } = require("uuid");
 require("dotenv").config();
 const cors = require("cors");
+const bcrypt = require('bcrypt');
 
 mongoose
   .connect(process.env.CONNECTION_STRING)
@@ -39,36 +40,103 @@ app.get("/username/:usernameValue", async (req, res) => {
   }
 });
 
-//create user
+// //create user
+// app.post("/signup", async (req, res) => {
+//   const newUser = req.body;
+//   // console.log(req.body)
+//   const user = new User(newUser);
+//   console.log("Created an user");
+//   console.log(user);
+//   await user.save();
+//   res.send({ message: "New User Created." });
+// });
+
+
+// create user
 app.post("/signup", async (req, res) => {
   const newUser = req.body;
-  // console.log(req.body)
-  const user = new User(newUser);
-  console.log("Created an user");
-  console.log(user);
-  await user.save();
-  res.send({ message: "New User Created." });
+
+  try {
+    // Hash the user's password before saving it
+    const hashedPassword = await bcrypt.hash(newUser.password, 10);
+    newUser.password = hashedPassword;
+
+    const user = new User(newUser);
+    console.log("Created a user");
+    await user.save();
+    res.send({ message: "New User Created." });
+  } catch (error) {
+    console.error("Error creating user:", error);
+    res.status(500).send({ message: "Error creating user." });
+  }
 });
+
+
+
+
+// Authorization generation endpoint
+// app.post("/auth", async (req, res) => {
+//   console.log("arrived");
+//   console.log(req.body);
+//   const user = await User.findOne({ username: req.body.username });
+//   //console.log(user);
+//   if (!user) {
+//     return res.sendStatus(403);
+//   }
+
+//   if (req.body.password !== user.password) {
+//     console.log("wrong password");
+//     return res.sendStatus(403);
+//   }
+//   // code to generate token
+//   user.token = uuidv4();
+//   await user.save();
+//   res.send({ token: user.token });
+// });
+
+
+// auth with bcrypt
 
 // Authorization generation endpoint
 app.post("/auth", async (req, res) => {
   console.log("arrived");
   console.log(req.body);
-  const user = await User.findOne({ username: req.body.username });
-  //console.log(user);
-  if (!user) {
-    return res.sendStatus(403);
-  }
+  const { username, password } = req.body;
 
-  if (req.body.password !== user.password) {
-    console.log("wrong password");
-    return res.sendStatus(403);
+  try {
+    // Find the user by username
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      return res.sendStatus(403); // User not found
+    }
+
+    // Compare the provided password with the hashed password stored in the database
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+      console.log("wrong password");
+      return res.sendStatus(403); // Incorrect password
+    }
+
+    // Generate token
+    user.token = uuidv4();
+    await user.save();
+    res.send({ token: user.token });
+  } catch (error) {
+    console.error("Error authenticating user:", error);
+    res.status(500).send({ message: "Error authenticating user." });
   }
-  // code to generate token
-  user.token = uuidv4();
-  await user.save();
-  res.send({ token: user.token });
 });
+
+
+
+
+
+
+
+
+
 
 // get all posts in database for the homepage without authentication
 
@@ -375,26 +443,53 @@ app.get("/isEventBookmarked/:eventId", async (req, res) => {
 
 
 // Get logged user's username controller
+// app.get("/loggedUsername", async (req, res) => {
+//   try {
+//     // Retrieve the user's token from the authorization header
+//     const authHeader = req.headers["authorization"];
+
+//     // Find the user based on the token
+//     const user = await User.findOne({ token: authHeader });
+
+//     // Check if the user exists
+//     if (!user) {
+//       return res.sendStatus(403); // Forbidden if user not found
+//     }
+
+//     // Send the user's username in the response
+//     res.send({ username: user.username });
+//   } catch (error) {
+//     console.error("Error fetching logged user's username:", error);
+//     res.status(500).send({ message: "Error fetching logged user's username." });
+//   }
+// });
+
 app.get("/loggedUsername", async (req, res) => {
   try {
     // Retrieve the user's token from the authorization header
     const authHeader = req.headers["authorization"];
+
+    // Check if the authorization header is missing or invalid
+    if (!authHeader) {
+      return res.status(401).send({ message: "Unauthorized: Missing token" }); // Return 401 Unauthorized
+    }
 
     // Find the user based on the token
     const user = await User.findOne({ token: authHeader });
 
     // Check if the user exists
     if (!user) {
-      return res.sendStatus(403); // Forbidden if user not found
+      return res.status(404).send({ message: "User not found." }); // Return 404 Not Found
     }
 
     // Send the user's username in the response
     res.send({ username: user.username });
   } catch (error) {
     console.error("Error fetching logged user's username:", error);
-    res.status(500).send({ message: "Error fetching logged user's username." });
+    res.status(500).send({ message: "Error fetching logged user's username." }); // Return 500 Internal Server Error
   }
 });
+
 
 
 
@@ -403,9 +498,15 @@ app.get("/loggedUsername", async (req, res) => {
 
 // starting the server
 
-app.listen(port, () => {
-  console.log(`listening on port ${port}`);
+// app.listen(port, () => {
+//   console.log(`listening on port ${port}`);
 
+// });
+
+// starting the server
+app.listen(3001, () => {
+  console.log("listening on port 3001");
 });
+
 
 module.exports = app;
