@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const port = process.env.PORT || 3001;
 const { Event } = require("./models/event");
 const { User } = require("./models/user");
 const { v4: uuidv4 } = require("uuid");
@@ -230,9 +231,6 @@ app.delete("/:id", async (req, res) => {
 });
 
 
-
-
-
 // new controllers \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 // Add interested event
@@ -367,7 +365,7 @@ app.get("/isEventBookmarked/:eventId", async (req, res) => {
 
     // Check if the user has bookmarked the event
     const isBookmarked = user.interested.includes(eventId);
-    console.log("Bookmark status for event", eventId, ":", isBookmarked); // Log the bookmark status with event ID // Log the bookmark status
+    // console.log("Bookmark status for event", eventId, ":", isBookmarked); // Log the bookmark status with event ID // Log the bookmark status
     res.send({ bookmarked: isBookmarked });
   } catch (error) {
     console.error("Error checking bookmark status:", error);
@@ -376,23 +374,38 @@ app.get("/isEventBookmarked/:eventId", async (req, res) => {
 });
 
 
+// Get logged user's username controller
+app.get("/loggedUsername", async (req, res) => {
+  try {
+    // Retrieve the user's token from the authorization header
+    const authHeader = req.headers["authorization"];
+
+    // Find the user based on the token
+    const user = await User.findOne({ token: authHeader });
+
+    // Check if the user exists
+    if (!user) {
+      return res.sendStatus(403); // Forbidden if user not found
+    }
+
+    // Send the user's username in the response
+    res.send({ username: user.username });
+  } catch (error) {
+    console.error("Error fetching logged user's username:", error);
+    res.status(500).send({ message: "Error fetching logged user's username." });
+  }
+});
 
 
 
 // new controllers \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 
-
-
-
-
-
 // starting the server
 
-app.listen(3001, () => {
-  console.log("listening on port 3001");
-  // app.listen(
-  //   3000,
-  //   () => {
-  //   console.log("listening on port 3000");
+app.listen(port, () => {
+  console.log(`listening on port ${port}`);
+
 });
+
+module.exports = app;
