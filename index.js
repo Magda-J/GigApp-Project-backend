@@ -253,7 +253,7 @@ app.delete("/:id", async (req, res) => {
   }
 });
 
-// new controllers \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
 
 // Add interested event
 app.post("/addInterestedEvent", async (req, res) => {
@@ -422,7 +422,6 @@ app.get("/loggedUsername", async (req, res) => {
   }
 });
 
-// new controllers \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 
 // starting the server

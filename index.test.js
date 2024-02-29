@@ -231,7 +231,7 @@ describe("PUT /:id", () => {
   it("should update an event if authenticated user is authorized", async () => {
     // First, create a user
     const user = new User({
-      username: "TestUser",
+      username: "TestUser3",
       password: await bcrypt.hash("Password1234.", 10),
     });
     await user.save();
