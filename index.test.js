@@ -2,7 +2,7 @@ require("dotenv").config({ path: ".env.test" }); // Load test environment variab
 
 const request = require("supertest");
 const app = require("./index");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 // Test 1//////////////////// to check retrievel of all events in the dastabase
 // Asserts that the response status is 200.
