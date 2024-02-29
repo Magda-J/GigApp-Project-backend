@@ -6,7 +6,7 @@ const { User } = require("./models/user");
 const { v4: uuidv4 } = require("uuid");
 require("dotenv").config();
 const cors = require("cors");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 mongoose
   .connect(process.env.CONNECTION_STRING)
