@@ -1,11 +1,12 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const port = process.env.PORT || 3001;
+
 const { Event } = require("./models/event");
 const { User } = require("./models/user");
 const { v4: uuidv4 } = require("uuid");
 require("dotenv").config();
 const cors = require("cors");
+const bcrypt = require("bcrypt");
 
 mongoose
   .connect(process.env.CONNECTION_STRING)
@@ -39,35 +40,56 @@ app.get("/username/:usernameValue", async (req, res) => {
   }
 });
 
-//create user
+// create user
 app.post("/signup", async (req, res) => {
   const newUser = req.body;
-  // console.log(req.body)
-  const user = new User(newUser);
-  console.log("Created an user");
-  console.log(user);
-  await user.save();
-  res.send({ message: "New User Created." });
+
+  try {
+    // Hash the user's password before saving it
+    const hashedPassword = await bcrypt.hash(newUser.password, 10);
+    newUser.password = hashedPassword;
+
+    const user = new User(newUser);
+    console.log("Created a user");
+    await user.save();
+    res.send({ message: "New User Created." });
+  } catch (error) {
+    console.error("Error creating user:", error);
+    res.status(500).send({ message: "Error creating user." });
+  }
 });
 
+// auth with bcrypt
 // Authorization generation endpoint
 app.post("/auth", async (req, res) => {
   console.log("arrived");
   console.log(req.body);
-  const user = await User.findOne({ username: req.body.username });
-  //console.log(user);
-  if (!user) {
-    return res.sendStatus(403);
-  }
+  const { username, password } = req.body;
 
-  if (req.body.password !== user.password) {
-    console.log("wrong password");
-    return res.sendStatus(403);
+  try {
+    // Find the user by username
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      return res.sendStatus(403); // User not found
+    }
+
+    // Compare the provided password with the hashed password stored in the database
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+      console.log("wrong password");
+      return res.sendStatus(403);
+    }
+
+    // Generate token
+    user.token = uuidv4();
+    await user.save();
+    res.send({ token: user.token });
+  } catch (error) {
+    console.error("Error authenticating user:", error);
+    res.status(500).send({ message: "Error authenticating user." });
   }
-  // code to generate token
-  user.token = uuidv4();
-  await user.save();
-  res.send({ token: user.token });
 });
 
 // get all posts in database for the homepage without authentication
@@ -138,6 +160,7 @@ app.post("/", async (req, res) => {
       return res.sendStatus(403); // Forbidden if user not found
     }
 
+   
     // Create a new event document and associate it with the user
     const event = new Event({
       ...newEvent,
@@ -231,7 +254,6 @@ app.delete("/:id", async (req, res) => {
 });
 
 
-// new controllers \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 // Add interested event
 app.post("/addInterestedEvent", async (req, res) => {
@@ -249,7 +271,6 @@ app.post("/addInterestedEvent", async (req, res) => {
 
     // Get the event ID from the request body
     const eventId = req.body.eventId;
-    
 
     // Check if the event ID is provided
     if (!eventId) {
@@ -278,7 +299,6 @@ app.post("/addInterestedEvent", async (req, res) => {
   }
 });
 
-
 // Get interested events controller
 app.get("/interestedEvents", async (req, res) => {
   try {
@@ -287,14 +307,15 @@ app.get("/interestedEvents", async (req, res) => {
     if (!user) {
       return res.sendStatus(403); // Forbidden if user not found
     }
-    const interestedEvents = await Event.find({ _id: { $in: user.interested } });
+    const interestedEvents = await Event.find({
+      _id: { $in: user.interested },
+    });
     res.send(interestedEvents);
   } catch (error) {
     console.error("Error fetching interested events:", error);
     res.status(500).send({ message: "Error fetching interested events." });
   }
 });
-
 
 // Remove interested event
 app.post("/removeInterestedEvent", async (req, res) => {
@@ -308,7 +329,7 @@ app.post("/removeInterestedEvent", async (req, res) => {
     }
 
     const eventId = req.body.eventId;
-    console.log(`this is the event id ${eventId}`)
+    console.log(`this is the event id ${eventId}`);
 
     if (!eventId) {
       console.log("Event ID not provided");
@@ -326,7 +347,7 @@ app.post("/removeInterestedEvent", async (req, res) => {
 
     console.log("Event removed from bookmarks successfully");
     res.send({ message: "Event removed from bookmarks" });
-    console.log( "Request sent successfully",res.send);
+    console.log("Request sent successfully", res.send);
   } catch (error) {
     console.error("Error removing event from bookmarks:", error);
     res.status(500).send({ message: "Error removing event from bookmarks." });
@@ -373,41 +394,38 @@ app.get("/isEventBookmarked/:eventId", async (req, res) => {
   }
 });
 
-
 // Get logged user's username controller
+
 app.get("/loggedUsername", async (req, res) => {
   try {
     // Retrieve the user's token from the authorization header
     const authHeader = req.headers["authorization"];
+
+    // Check if the authorization header is missing or invalid
+    if (!authHeader) {
+      return res.status(401).send({ message: "Unauthorized: Missing token" }); // Return 401 Unauthorized
+    }
 
     // Find the user based on the token
     const user = await User.findOne({ token: authHeader });
 
     // Check if the user exists
     if (!user) {
-      return res.sendStatus(403); // Forbidden if user not found
+      return res.status(404).send({ message: "User not found." }); // Return 404 Not Found
     }
 
     // Send the user's username in the response
     res.send({ username: user.username });
   } catch (error) {
     console.error("Error fetching logged user's username:", error);
-    res.status(500).send({ message: "Error fetching logged user's username." });
+    res.status(500).send({ message: "Error fetching logged user's username." }); // Return 500 Internal Server Error
   }
 });
 
 
 
-// new controllers \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-
 // starting the server
 
-// app.listen(port, () => {
-//   console.log(`listening on port ${port}`);
-
-// });
-// starting the server
 app.listen(3001, () => {
   console.log("listening on port 3001");
 });
