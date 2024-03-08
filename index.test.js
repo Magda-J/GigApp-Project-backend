@@ -23,7 +23,7 @@ describe("POST /signup", () => {
     const response = await request(app).post("/signup").send({
       username: "testuser",
       password: "password123",
-      // Add any other required fields here
+      
     });
 
     expect(response.status).toBe(200);
@@ -41,7 +41,7 @@ describe("POST /auth", () => {
     const response = await request(app).post("/auth").send({
       username: "testuser",
       password: "password123",
-      // Add any other required fields here
+     
     });
 
     expect(response.status).toBe(200);
@@ -52,7 +52,7 @@ describe("POST /auth", () => {
     const response = await request(app).post("/auth").send({
       username: "nonexistentuser",
       password: "password123",
-      // Add any other required fields here
+    
     });
 
     expect(response.status).toBe(403);
@@ -62,7 +62,7 @@ describe("POST /auth", () => {
     const response = await request(app).post("/auth").send({
       username: "testuser",
       password: "wrongpassword",
-      // Add any other required fields here
+    
     });
 
     expect(response.status).toBe(403);
@@ -87,7 +87,7 @@ describe("GET /loggedUsername", () => {
     const authResponse = await request(app).post("/auth").send({
       username: "testuser",
       password: "password123",
-      // Add any other required fields here
+    
     });
 
     // Extract the token from the response
@@ -119,7 +119,7 @@ const { Event } = require("./models/event");
 
 describe("POST /", () => {
   it("should create a new event if authenticated", async () => {
-    // First, authenticate and get the token
+    // authenticate and get the token
     const authResponse = await request(app)
       .post("/auth")
       .send({ username: "testuser", password: "password123" });
@@ -184,7 +184,7 @@ describe("DELETE /:id", () => {
     user.token = token;
     await user.save();
 
-    // Create a sample event associated with the user
+    // Create event associated with the user
     const sampleEvent = await Event.create({
       name: "Sample Event",
       city: "Sample City",
@@ -236,7 +236,7 @@ describe("PUT /:id", () => {
     });
     await user.save();
 
-    // Authenticate and get the token
+    // Authenticate + get the token
     const authResponse = await request(app)
       .post("/auth")
       .send({ username: "TestUser3", password: "Password1234." });
@@ -248,7 +248,7 @@ describe("PUT /:id", () => {
     user.token = token;
     await user.save();
 
-    // Create a sample event associated with the user
+    // Create event associated with the user
     const sampleEvent = await Event.create({
       name: "Sample Event",
       city: "Sample City",
